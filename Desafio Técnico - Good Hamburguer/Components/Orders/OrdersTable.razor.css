@@ -1,0 +1,57 @@
+.orders-table-card {
+    border: 1px solid #e7edf7;
+    border-radius: 1rem;
+    box-shadow: 0 14px 26px -24px rgba(8, 19, 38, 0.8);
+}
+
+.orders-table-card .card-header {
+    background: #f8faff;
+    border-bottom: 1px solid #e7edf7;
+    font-weight: 600;
+}
+
+.orders-empty-state {
+    padding: 1rem;
+    text-align: center;
+    border: 1px dashed #d5dfef;
+    border-radius: 0.9rem;
+    background-color: #fbfcff;
+}
+
+.empty-state-icon {
+    margin-bottom: 0.4rem;
+    font-size: 1.5rem;
+}
+
+.orders-table thead th {
+    color: #5f6f84;
+    font-size: 0.82rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.order-id {
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.74rem;
+    color: #68788f;
+}
+
+.order-items-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.order-item-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: #edf3ff;
+    color: #2f5da5;
+    font-size: 0.76rem;
+    font-weight: 600;
+}
+
+.order-total {
+    color: #123a6f;
+}

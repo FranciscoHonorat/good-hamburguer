@@ -1,0 +1,13 @@
+.page-header {
+    margin-bottom: 1.25rem;
+}
+
+.page-header p {
+    margin-bottom: 0;
+    color: #617189;
+}
+
+.orders-page-stack {
+    display: grid;
+    gap: 1rem;
+}

@@ -1,0 +1,10 @@
+# <tipo>(<escopo-opcional>): <resumo curto no imperativo>
+#
+# Corpo (explique o porquê, não só o que):
+# - contexto
+# - decisão técnica
+# - impacto/riscos
+#
+# Rodapé (opcional):
+# BREAKING CHANGE: <descrição>
+# Closes #<id>

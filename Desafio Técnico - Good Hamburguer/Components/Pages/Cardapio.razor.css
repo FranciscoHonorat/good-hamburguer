@@ -1,0 +1,40 @@
+.page-header {
+    margin-bottom: 1.25rem;
+}
+
+.page-header p {
+    margin-bottom: 0;
+    color: #617189;
+}
+
+.menu-item-card {
+    border: 1px solid #e8edf5;
+    border-radius: 1rem;
+    box-shadow: 0 12px 24px -22px rgba(10, 20, 38, 0.75);
+}
+
+.menu-item-card .card-body {
+    padding: 1.1rem;
+}
+
+.menu-category {
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    background: #eef4ff;
+    color: #355ca0;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.menu-code {
+    margin-top: 0.35rem;
+    color: #7b889a;
+    font-size: 0.9rem;
+}
+
+.menu-price {
+    margin-top: 1rem;
+    color: #173155;
+    font-size: 1.2rem;
+    font-weight: 700;
+}

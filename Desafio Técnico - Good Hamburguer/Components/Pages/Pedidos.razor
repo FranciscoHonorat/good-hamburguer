@@ -1,0 +1,180 @@
+@page "/pedidos"
+@inject MenuApiClient MenuApiClient
+@inject OrdersApiClient OrdersApiClient
+@inject ILogger<Pedidos> Logger
+
+<PageTitle>Pedidos</PageTitle>
+
+<section class="page-header">
+    <h1>Pedidos</h1>
+    <p>Crie pedidos com seleção rápida de itens e acompanhe os resultados com paginação.</p>
+</section>
+
+<FeedbackAlert Message="@_viewModel.Feedback.ErrorMessage" CssClass="alert-danger" />
+<FeedbackAlert Message="@_viewModel.Feedback.SuccessMessage" CssClass="alert-success" />
+
+<div class="orders-page-stack">
+    <OrderForm
+        ViewModel="_viewModel"
+        MenuItems="_menuItems"
+        OnSubmit="SubmitOrderAsync"
+        OnCancel="CancelEdit" />
+
+    <OrdersTable
+        Orders="_orders.Items"
+        IsLoading="_ordersLoadState.IsBusy"
+        IsActionInProgress="_viewModel.SubmitState.IsBusy"
+        OnRefresh="LoadOrdersAsync"
+        OnEdit="StartEdit"
+        OnDelete="DeleteOrderAsync" />
+
+    <Pagination
+        Page="_page"
+        TotalPages="_orders.TotalPages"
+        Disabled="@(_ordersLoadState.IsBusy || _viewModel.SubmitState.IsBusy)"
+        OnPageChanged="ChangePageAsync" />
+</div>
+
+@code {
+    private IReadOnlyList<MenuItemResponse> _menuItems = [];
+    private readonly CreateOrderViewModel _viewModel = new();
+    private PaginatedResponse<OrderResponse> _orders = new()
+    {
+        Items = [],
+        Page = 1,
+        PageSize = 10,
+        TotalItems = 0,
+        TotalPages = 0
+    };
+
+    private int _page = 1;
+    private const int PageSize = 10;
+    private readonly BusyState _ordersLoadState = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadMenuAsync();
+        await LoadOrdersAsync();
+    }
+
+    private async Task SubmitOrderAsync()
+    {
+        _viewModel.Feedback.Clear();
+
+        try
+        {
+            _viewModel.SubmitState.Start();
+            var request = new UpsertOrderRequest { ItemCodes = _viewModel.SelectedItemCodes.ToList() };
+
+            if (_viewModel.EditingOrderId is { } editingOrderId)
+            {
+                await OrdersApiClient.UpdateOrderAsync(editingOrderId, request);
+                _viewModel.Feedback.SetSuccess("Pedido atualizado com sucesso.");
+            }
+            else
+            {
+                await OrdersApiClient.CreateOrderAsync(request);
+                _viewModel.Feedback.SetSuccess("Pedido criado com sucesso.");
+            }
+
+            ResetForm();
+            _page = 1;
+            await LoadOrdersAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Falha ao salvar pedido");
+            _viewModel.Feedback.SetError(ex.Message);
+        }
+        finally
+        {
+            _viewModel.SubmitState.Stop();
+        }
+    }
+
+    private async Task DeleteOrderAsync(Guid id)
+    {
+        _viewModel.Feedback.Clear();
+
+        try
+        {
+            _viewModel.SubmitState.Start();
+            await OrdersApiClient.DeleteOrderAsync(id);
+            _viewModel.Feedback.SetSuccess("Pedido excluído com sucesso.");
+
+            if (_orders.Items.Count == 1 && _page > 1)
+            {
+                _page--;
+            }
+
+            await LoadOrdersAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Falha ao excluir pedido");
+            _viewModel.Feedback.SetError(ex.Message);
+        }
+        finally
+        {
+            _viewModel.SubmitState.Stop();
+        }
+    }
+
+    private async Task LoadMenuAsync()
+    {
+        try
+        {
+            _menuItems = await MenuApiClient.GetMenuAsync();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Falha ao carregar menu na tela de pedidos");
+            _viewModel.Feedback.SetError(ex.Message);
+        }
+    }
+
+    private async Task LoadOrdersAsync()
+    {
+        _viewModel.Feedback.Clear();
+
+        try
+        {
+            _ordersLoadState.Start();
+            _orders = await OrdersApiClient.GetOrdersAsync(_page, PageSize);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Falha ao carregar pedidos");
+            _viewModel.Feedback.SetError(ex.Message);
+        }
+        finally
+        {
+            _ordersLoadState.Stop();
+        }
+    }
+
+    private void StartEdit(OrderResponse order)
+    {
+        _viewModel.EditingOrderId = order.Id;
+        _viewModel.SelectedItemCodes.Clear();
+
+        foreach (var code in order.Items.Select(x => x.Code))
+        {
+            _viewModel.SelectedItemCodes.Add(code);
+        }
+    }
+
+    private void CancelEdit() => ResetForm();
+
+    private void ResetForm()
+    {
+        _viewModel.SelectedItemCodes.Clear();
+        _viewModel.EditingOrderId = null;
+    }
+
+    private async Task ChangePageAsync(int page)
+    {
+        _page = page;
+        await LoadOrdersAsync();
+    }
+}

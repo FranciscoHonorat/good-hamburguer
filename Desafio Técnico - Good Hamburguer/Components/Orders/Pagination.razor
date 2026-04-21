@@ -1,0 +1,42 @@
+<div class="pagination-shell d-flex justify-content-between align-items-center mt-2">
+    <small>Página @Page de @Math.Max(TotalPages, 1)</small>
+    <div class="d-flex gap-2">
+        <button class="btn btn-sm btn-outline-secondary"
+                @onclick="PreviousAsync"
+                disabled="@(Disabled || Page <= 1)">
+            Anterior
+        </button>
+        <button class="btn btn-sm btn-primary"
+                @onclick="NextAsync"
+                disabled="@(Disabled || TotalPages == 0 || Page >= TotalPages)">
+            Próxima
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int Page { get; set; }
+    [Parameter] public int TotalPages { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter, EditorRequired] public EventCallback<int> OnPageChanged { get; set; }
+
+    private async Task PreviousAsync()
+    {
+        if (Page <= 1)
+        {
+            return;
+        }
+
+        await OnPageChanged.InvokeAsync(Page - 1);
+    }
+
+    private async Task NextAsync()
+    {
+        if (TotalPages == 0 || Page >= TotalPages)
+        {
+            return;
+        }
+
+        await OnPageChanged.InvokeAsync(Page + 1);
+    }
+}

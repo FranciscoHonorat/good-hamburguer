@@ -1,0 +1,81 @@
+<section class="card orders-table-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <span>Lista de pedidos</span>
+        <button class="btn btn-sm btn-outline-primary" @onclick="OnRefresh" disabled="@IsActionInProgress">Atualizar</button>
+    </div>
+    <div class="card-body">
+        @if (IsLoading)
+        {
+            <p>Carregando...</p>
+        }
+        else if (Orders.Count == 0)
+        {
+            <div class="orders-empty-state">
+                <div class="empty-state-icon" aria-hidden="true">🧾</div>
+                <p class="mb-1 fw-semibold">Nenhum pedido encontrado</p>
+                <p class="mb-0 text-muted">Crie seu primeiro pedido selecionando itens acima.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-sm align-middle orders-table">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Itens</th>
+                            <th>Subtotal</th>
+                            <th>Desconto</th>
+                            <th>Total</th>
+                            <th>Criado em</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in Orders)
+                        {
+                            <tr @key="order.Id">
+                                <td><span class="order-id">@order.Id</span></td>
+                                <td>
+                                    <div class="order-items-wrap">
+                                        @foreach (var orderItem in order.Items)
+                                        {
+                                            <span class="order-item-badge">@orderItem.Code</span>
+                                        }
+                                    </div>
+                                </td>
+                                <td>R$ @order.Subtotal.ToString("0.00")</td>
+                                <td>@(order.DiscountPercentage * 100)% (R$ @order.DiscountAmount.ToString("0.00"))</td>
+                                <td><strong class="order-total">R$ @order.Total.ToString("0.00")</strong></td>
+                                <td>@order.CreatedAt.LocalDateTime.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>
+                                    <div class="d-flex gap-2 justify-content-end">
+                                        <button class="btn btn-sm btn-outline-secondary"
+                                                @onclick="() => OnEdit.InvokeAsync(order)"
+                                                disabled="@IsActionInProgress">
+                                            Editar
+                                        </button>
+                                        <button class="btn btn-sm btn-outline-danger"
+                                                @onclick="() => OnDelete.InvokeAsync(order.Id)"
+                                                disabled="@IsActionInProgress">
+                                            Excluir
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter, EditorRequired] public required IReadOnlyList<OrderResponse> Orders { get; set; }
+    [Parameter] public bool IsLoading { get; set; }
+    [Parameter] public bool IsActionInProgress { get; set; }
+    [Parameter, EditorRequired] public EventCallback OnRefresh { get; set; }
+    [Parameter, EditorRequired] public EventCallback<OrderResponse> OnEdit { get; set; }
+    [Parameter, EditorRequired] public EventCallback<Guid> OnDelete { get; set; }
+}

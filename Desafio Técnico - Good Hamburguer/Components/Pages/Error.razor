@@ -1,0 +1,29 @@
+﻿@page "/Error"
+@using System.Diagnostics
+
+<PageTitle>Error</PageTitle>
+
+<div class="alert alert-danger mt-4" role="alert">
+    <h1 class="h3 mb-2">Ops! Algo deu errado.</h1>
+    <p class="mb-0">Não foi possível concluir a operação neste momento. Tente novamente em instantes.</p>
+</div>
+
+@if (ShowRequestId)
+{
+    <p>
+        <strong>ID da requisição:</strong> <code>@RequestId</code>
+    </p>
+}
+
+<p class="text-muted">Se o problema persistir, compartilhe o ID da requisição com o suporte.</p>
+
+@code{
+    [CascadingParameter]
+    private HttpContext? HttpContext { get; set; }
+
+    private string? RequestId { get; set; }
+    private bool ShowRequestId => !string.IsNullOrEmpty(RequestId);
+
+    protected override void OnInitialized() =>
+        RequestId = Activity.Current?.Id ?? HttpContext?.TraceIdentifier;
+}
