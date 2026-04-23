@@ -21,6 +21,7 @@ main {
     align-items: center;
     color: #5f6f84;
     font-weight: 500;
+    padding-inline: 0.5rem;
 }
 
     .top-row ::deep a, .top-row ::deep .btn-link {

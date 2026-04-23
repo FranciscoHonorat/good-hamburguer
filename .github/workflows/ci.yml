@@ -20,16 +20,31 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Restore
-        run: dotnet restore "Desafio Técnico - Good Hamburguer/Desafio Técnico - Good Hamburguer.csproj"
+        run: |
+          dotnet restore "Desafio Técnico - Good Hamburguer/Desafio Técnico - Good Hamburguer.csproj"
+          dotnet restore "Desafio Técnico - Good Hamburguer.Tests.Unit/Desafio Técnico - Good Hamburguer.Tests.Unit.csproj"
+          dotnet restore "Desafio Técnico - Good Hamburguer.Tests.Integration/Desafio Técnico - Good Hamburguer.Tests.Integration.csproj"
 
       - name: Build app
         run: dotnet build "Desafio Técnico - Good Hamburguer/Desafio Técnico - Good Hamburguer.csproj" --configuration Release --no-restore
 
-      - name: Test unit
-        run: dotnet test "Desafio Técnico - Good Hamburguer.Tests.Unit/Desafio Técnico - Good Hamburguer.Tests.Unit.csproj" --configuration Release
+      - name: Build unit tests
+        run: dotnet build "Desafio Técnico - Good Hamburguer.Tests.Unit/Desafio Técnico - Good Hamburguer.Tests.Unit.csproj" --configuration Release --no-restore
 
-      - name: Test integration
-        run: dotnet test "Desafio Técnico - Good Hamburguer.Tests.Integration/Desafio Técnico - Good Hamburguer.Tests.Integration.csproj" --configuration Release
+      - name: Build integration tests
+        run: dotnet build "Desafio Técnico - Good Hamburguer.Tests.Integration/Desafio Técnico - Good Hamburguer.Tests.Integration.csproj" --configuration Release --no-restore
+
+      - name: Test backend unit
+        run: dotnet test "Desafio Técnico - Good Hamburguer.Tests.Unit/Desafio Técnico - Good Hamburguer.Tests.Unit.csproj" --configuration Release --no-build --filter "FullyQualifiedName~Tests.Unit.Services"
+
+      - name: Test frontend unit
+        run: dotnet test "Desafio Técnico - Good Hamburguer.Tests.Unit/Desafio Técnico - Good Hamburguer.Tests.Unit.csproj" --configuration Release --no-build --filter "FullyQualifiedName~Tests.Unit.Frontend"
+
+      - name: Test backend integration
+        run: dotnet test "Desafio Técnico - Good Hamburguer.Tests.Integration/Desafio Técnico - Good Hamburguer.Tests.Integration.csproj" --configuration Release --no-build --filter "FullyQualifiedName~OrdersApiTests"
+
+      - name: Test frontend integration
+        run: dotnet test "Desafio Técnico - Good Hamburguer.Tests.Integration/Desafio Técnico - Good Hamburguer.Tests.Integration.csproj" --configuration Release --no-build --filter "FullyQualifiedName~Tests.Integration.Frontend"
 
       - name: Docker build validation
         run: docker build -t good-hamburger:ci .

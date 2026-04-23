@@ -13,7 +13,17 @@
 
 @if (_loadState.IsBusy)
 {
-    <p>Carregando cardápio...</p>
+    <div class="state-message state-message--soft">
+        <p class="state-message-title mb-1">Carregando cardápio...</p>
+        <p class="state-message-subtitle mb-0">Aguarde alguns instantes para visualizar os itens disponíveis.</p>
+    </div>
+}
+else if (_items.Count == 0)
+{
+    <div class="state-message state-message--soft">
+        <p class="state-message-title mb-1">Nenhum item disponível</p>
+        <p class="state-message-subtitle mb-0">Não há itens cadastrados no cardápio no momento.</p>
+    </div>
 }
 else
 {
@@ -42,20 +52,20 @@ else
     private readonly FeedbackState _feedback = new();
 
     protected override async Task OnInitializedAsync()
+        => await ExecuteLoadActionAsync(async () => _items = await MenuApiClient.GetMenuAsync(), "Falha ao carregar cardápio");
+
+    private async Task ExecuteLoadActionAsync(Func<Task> action, string errorLogMessage)
     {
+        _feedback.Clear();
+
         try
         {
-            _loadState.Start();
-            _items = await MenuApiClient.GetMenuAsync();
+            await _loadState.ExecuteAsync(action);
         }
         catch (Exception ex)
         {
-            Logger.LogWarning(ex, "Falha ao carregar cardápio");
+            Logger.LogWarning(ex, errorLogMessage);
             _feedback.SetError(ex.Message);
-        }
-        finally
-        {
-            _loadState.Stop();
         }
     }
 }

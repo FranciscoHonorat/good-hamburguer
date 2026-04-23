@@ -5,6 +5,9 @@ public sealed class FeedbackState
     public string? ErrorMessage { get; private set; }
     public string? SuccessMessage { get; private set; }
 
+    public bool HasError => !string.IsNullOrWhiteSpace(ErrorMessage);
+    public bool HasSuccess => !string.IsNullOrWhiteSpace(SuccessMessage);
+
     public void Clear()
     {
         ErrorMessage = null;
@@ -13,13 +16,16 @@ public sealed class FeedbackState
 
     public void SetError(string message)
     {
-        ErrorMessage = message;
+        ErrorMessage = NormalizeMessage(message);
         SuccessMessage = null;
     }
 
     public void SetSuccess(string message)
     {
-        SuccessMessage = message;
+        SuccessMessage = NormalizeMessage(message);
         ErrorMessage = null;
     }
+
+    private static string NormalizeMessage(string message)
+        => string.IsNullOrWhiteSpace(message) ? "Não foi possível concluir a operação." : message.Trim();
 }

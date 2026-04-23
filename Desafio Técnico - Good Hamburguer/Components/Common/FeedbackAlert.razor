@@ -1,6 +1,6 @@
 @if (!string.IsNullOrWhiteSpace(Message))
 {
-    <div class="alert @CssClass" role="alert">@Message</div>
+    <div class="alert @CssClass" role="alert" aria-live="polite">@Message</div>
 }
 
 @code {

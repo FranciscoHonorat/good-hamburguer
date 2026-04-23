@@ -17,6 +17,8 @@
     <OrderForm
         ViewModel="_viewModel"
         MenuItems="_menuItems"
+        IsMenuLoading="_menuLoadState.IsBusy"
+        IsBusy="@IsFormBusy"
         OnSubmit="SubmitOrderAsync"
         OnCancel="CancelEdit" />
 
@@ -24,14 +26,14 @@
         Orders="_orders.Items"
         IsLoading="_ordersLoadState.IsBusy"
         IsActionInProgress="_viewModel.SubmitState.IsBusy"
-        OnRefresh="LoadOrdersAsync"
+        OnRefresh="RefreshOrdersAsync"
         OnEdit="StartEdit"
         OnDelete="DeleteOrderAsync" />
 
     <Pagination
         Page="_page"
         TotalPages="_orders.TotalPages"
-        Disabled="@(_ordersLoadState.IsBusy || _viewModel.SubmitState.IsBusy)"
+        Disabled="@IsPageBusy"
         OnPageChanged="ChangePageAsync" />
 </div>
 
@@ -49,7 +51,11 @@
 
     private int _page = 1;
     private const int PageSize = 10;
+    private readonly BusyState _menuLoadState = new();
     private readonly BusyState _ordersLoadState = new();
+
+    private bool IsFormBusy => _viewModel.SubmitState.IsBusy || _menuLoadState.IsBusy;
+    private bool IsPageBusy => _ordersLoadState.IsBusy || _viewModel.SubmitState.IsBusy;
 
     protected override async Task OnInitializedAsync()
     {
@@ -59,12 +65,9 @@
 
     private async Task SubmitOrderAsync()
     {
-        _viewModel.Feedback.Clear();
-
-        try
+        await ExecuteSubmitActionAsync(async () =>
         {
-            _viewModel.SubmitState.Start();
-            var request = new UpsertOrderRequest { ItemCodes = _viewModel.SelectedItemCodes.ToList() };
+            var request = _viewModel.ToRequest();
 
             if (_viewModel.EditingOrderId is { } editingOrderId)
             {
@@ -77,28 +80,16 @@
                 _viewModel.Feedback.SetSuccess("Pedido criado com sucesso.");
             }
 
-            ResetForm();
+            _viewModel.ResetSelection();
             _page = 1;
-            await LoadOrdersAsync();
-        }
-        catch (Exception ex)
-        {
-            Logger.LogWarning(ex, "Falha ao salvar pedido");
-            _viewModel.Feedback.SetError(ex.Message);
-        }
-        finally
-        {
-            _viewModel.SubmitState.Stop();
-        }
+            await LoadOrdersAsync(clearFeedback: false);
+        }, "Falha ao salvar pedido");
     }
 
     private async Task DeleteOrderAsync(Guid id)
     {
-        _viewModel.Feedback.Clear();
-
-        try
+        await ExecuteSubmitActionAsync(async () =>
         {
-            _viewModel.SubmitState.Start();
             await OrdersApiClient.DeleteOrderAsync(id);
             _viewModel.Feedback.SetSuccess("Pedido excluído com sucesso.");
 
@@ -107,69 +98,59 @@
                 _page--;
             }
 
-            await LoadOrdersAsync();
-        }
-        catch (Exception ex)
-        {
-            Logger.LogWarning(ex, "Falha ao excluir pedido");
-            _viewModel.Feedback.SetError(ex.Message);
-        }
-        finally
-        {
-            _viewModel.SubmitState.Stop();
-        }
+            await LoadOrdersAsync(clearFeedback: false);
+        }, "Falha ao excluir pedido");
     }
 
     private async Task LoadMenuAsync()
-    {
-        try
-        {
-            _menuItems = await MenuApiClient.GetMenuAsync();
-        }
-        catch (Exception ex)
-        {
-            Logger.LogWarning(ex, "Falha ao carregar menu na tela de pedidos");
-            _viewModel.Feedback.SetError(ex.Message);
-        }
-    }
+        => await ExecuteLoadActionAsync(
+            _menuLoadState,
+            async () => _menuItems = await MenuApiClient.GetMenuAsync(),
+            "Falha ao carregar menu na tela de pedidos");
 
-    private async Task LoadOrdersAsync()
+    private async Task LoadOrdersAsync(bool clearFeedback = true)
+        => await ExecuteLoadActionAsync(
+            _ordersLoadState,
+            async () => _orders = await OrdersApiClient.GetOrdersAsync(_page, PageSize),
+            "Falha ao carregar pedidos",
+            clearFeedback);
+
+    private void StartEdit(OrderResponse order)
+        => _viewModel.StartEditing(order);
+
+    private void CancelEdit() => _viewModel.ResetSelection();
+
+    private async Task ExecuteSubmitActionAsync(Func<Task> action, string errorLogMessage)
     {
         _viewModel.Feedback.Clear();
 
         try
         {
-            _ordersLoadState.Start();
-            _orders = await OrdersApiClient.GetOrdersAsync(_page, PageSize);
+            await _viewModel.SubmitState.ExecuteAsync(action);
         }
         catch (Exception ex)
         {
-            Logger.LogWarning(ex, "Falha ao carregar pedidos");
+            Logger.LogWarning(ex, errorLogMessage);
             _viewModel.Feedback.SetError(ex.Message);
         }
-        finally
-        {
-            _ordersLoadState.Stop();
-        }
     }
 
-    private void StartEdit(OrderResponse order)
+    private async Task ExecuteLoadActionAsync(BusyState state, Func<Task> action, string errorLogMessage, bool clearFeedback = false)
     {
-        _viewModel.EditingOrderId = order.Id;
-        _viewModel.SelectedItemCodes.Clear();
-
-        foreach (var code in order.Items.Select(x => x.Code))
+        if (clearFeedback)
         {
-            _viewModel.SelectedItemCodes.Add(code);
+            _viewModel.Feedback.Clear();
         }
-    }
 
-    private void CancelEdit() => ResetForm();
-
-    private void ResetForm()
-    {
-        _viewModel.SelectedItemCodes.Clear();
-        _viewModel.EditingOrderId = null;
+        try
+        {
+            await state.ExecuteAsync(action);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, errorLogMessage);
+            _viewModel.Feedback.SetError(ex.Message);
+        }
     }
 
     private async Task ChangePageAsync(int page)
@@ -177,4 +158,6 @@
         _page = page;
         await LoadOrdersAsync();
     }
+
+    private Task RefreshOrdersAsync() => LoadOrdersAsync();
 }

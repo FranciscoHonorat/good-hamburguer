@@ -1,6 +1,5 @@
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Desafio_Técnico___Good_Hamburguer.Middleware;
 
@@ -26,17 +25,10 @@ public sealed class ApiKeyMiddleware(RequestDelegate next, IConfiguration config
         if (!context.Request.Headers.TryGetValue(HeaderName, out var providedApiKey) ||
             !IsApiKeyValid(configuredApiKey, providedApiKey.ToString()))
         {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            context.Response.ContentType = "application/problem+json";
-            var problemDetails = new ProblemDetails
-            {
-                Title = "Não autorizado.",
-                Detail = "Chave de API inválida ou ausente.",
-                Status = StatusCodes.Status401Unauthorized,
-                Instance = context.Request.Path
-            };
-            problemDetails.Extensions["traceId"] = context.TraceIdentifier;
-            await context.Response.WriteAsJsonAsync(problemDetails);
+            await ProblemDetailsResponseWriter.WriteAsync(
+                context,
+                StatusCodes.Status401Unauthorized,
+                "Chave de API inválida ou ausente.");
             return;
         }
 

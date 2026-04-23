@@ -55,3 +55,23 @@
 .order-total {
     color: #123a6f;
 }
+
+.state-message {
+    padding: 0.85rem 1rem;
+    border-radius: 0.75rem;
+}
+
+.state-message--soft {
+    border: 1px dashed #d5dfef;
+    background-color: #fbfcff;
+}
+
+.state-message-title {
+    color: #2a3f5f;
+    font-weight: 600;
+}
+
+.state-message-subtitle {
+    color: #5f6f84;
+    font-size: 0.92rem;
+}

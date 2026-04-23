@@ -7,6 +7,11 @@ public sealed class ApiErrorReader
 {
     public async Task<string> ReadErrorMessageAsync(HttpResponseMessage response)
     {
+        if (response.Content is null)
+        {
+            return BuildDefaultErrorMessage(response);
+        }
+
         try
         {
             var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
@@ -15,10 +20,13 @@ public sealed class ApiErrorReader
                 return problem.Detail;
             }
         }
-        catch
+        catch (Exception)
         {
         }
 
-        return $"Erro na API ({(int)response.StatusCode}).";
+        return BuildDefaultErrorMessage(response);
     }
+
+    private static string BuildDefaultErrorMessage(HttpResponseMessage response)
+        => $"Erro na API ({(int)response.StatusCode} - {response.ReasonPhrase ?? "sem detalhe"}).";
 }

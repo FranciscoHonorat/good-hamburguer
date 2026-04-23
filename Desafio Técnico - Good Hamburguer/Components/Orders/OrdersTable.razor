@@ -1,12 +1,15 @@
 <section class="card orders-table-card">
     <div class="card-header d-flex justify-content-between align-items-center">
         <span>Lista de pedidos</span>
-        <button class="btn btn-sm btn-outline-primary" @onclick="OnRefresh" disabled="@IsActionInProgress">Atualizar</button>
+        <button class="btn btn-sm btn-outline-primary" @onclick="OnRefresh" disabled="@IsBusy">Atualizar</button>
     </div>
     <div class="card-body">
         @if (IsLoading)
         {
-            <p>Carregando...</p>
+            <div class="state-message state-message--soft">
+                <p class="state-message-title mb-1">Carregando pedidos...</p>
+                <p class="state-message-subtitle mb-0">Buscando dados da página atual.</p>
+            </div>
         }
         else if (Orders.Count == 0)
         {
@@ -52,12 +55,12 @@
                                     <div class="d-flex gap-2 justify-content-end">
                                         <button class="btn btn-sm btn-outline-secondary"
                                                 @onclick="() => OnEdit.InvokeAsync(order)"
-                                                disabled="@IsActionInProgress">
+                                                disabled="@IsBusy">
                                             Editar
                                         </button>
                                         <button class="btn btn-sm btn-outline-danger"
                                                 @onclick="() => OnDelete.InvokeAsync(order.Id)"
-                                                disabled="@IsActionInProgress">
+                                                disabled="@IsBusy">
                                             Excluir
                                         </button>
                                     </div>
@@ -78,4 +81,6 @@
     [Parameter, EditorRequired] public EventCallback OnRefresh { get; set; }
     [Parameter, EditorRequired] public EventCallback<OrderResponse> OnEdit { get; set; }
     [Parameter, EditorRequired] public EventCallback<Guid> OnDelete { get; set; }
+
+    private bool IsBusy => IsLoading || IsActionInProgress;
 }

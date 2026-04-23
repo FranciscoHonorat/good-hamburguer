@@ -3,12 +3,12 @@
     <div class="d-flex gap-2">
         <button class="btn btn-sm btn-outline-secondary"
                 @onclick="PreviousAsync"
-                disabled="@(Disabled || Page <= 1)">
+                disabled="@IsPreviousDisabled">
             Anterior
         </button>
         <button class="btn btn-sm btn-primary"
                 @onclick="NextAsync"
-                disabled="@(Disabled || TotalPages == 0 || Page >= TotalPages)">
+                disabled="@IsNextDisabled">
             Próxima
         </button>
     </div>
@@ -20,9 +20,12 @@
     [Parameter] public bool Disabled { get; set; }
     [Parameter, EditorRequired] public EventCallback<int> OnPageChanged { get; set; }
 
+    private bool IsPreviousDisabled => Disabled || Page <= 1;
+    private bool IsNextDisabled => Disabled || TotalPages == 0 || Page >= TotalPages;
+
     private async Task PreviousAsync()
     {
-        if (Page <= 1)
+        if (IsPreviousDisabled)
         {
             return;
         }
@@ -32,7 +35,7 @@
 
     private async Task NextAsync()
     {
-        if (TotalPages == 0 || Page >= TotalPages)
+        if (IsNextDisabled)
         {
             return;
         }

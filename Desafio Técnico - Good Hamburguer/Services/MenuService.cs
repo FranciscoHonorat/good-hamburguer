@@ -18,10 +18,21 @@ public sealed class MenuService
 
     public IReadOnlyList<MenuItem> GetAll() => Items;
 
+    public bool Exists(string code)
+        => TryGetByCode(code, out _);
+
     public bool TryGetByCode(string code, out MenuItem? item)
     {
-        var found = ItemsByCode.TryGetValue(code, out var menuItem);
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            item = null;
+            return false;
+        }
+
+        var found = ItemsByCode.TryGetValue(NormalizeCode(code), out var menuItem);
         item = menuItem;
         return found;
     }
+
+    private static string NormalizeCode(string code) => code.Trim();
 }

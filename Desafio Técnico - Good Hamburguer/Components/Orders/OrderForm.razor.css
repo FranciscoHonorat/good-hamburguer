@@ -16,6 +16,26 @@
     font-weight: 500;
 }
 
+.state-message {
+    padding: 0.75rem 0.85rem;
+    border-radius: 0.7rem;
+}
+
+.state-message--soft {
+    border: 1px dashed #d4deee;
+    background-color: #f9fbff;
+}
+
+.state-message-title {
+    color: #2a3f5f;
+    font-weight: 600;
+}
+
+.state-message-subtitle {
+    color: #5f6f84;
+    font-size: 0.92rem;
+}
+
 .menu-option {
     display: flex;
     gap: 0.7rem;
